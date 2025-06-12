@@ -1,0 +1,39 @@
+Tile_Type:
+    tile_type_id
+    tile_type_name
+    createdAt
+    updatedAt
+    deletedAt
+
+Tile_Sizes:
+    tile_size_id
+    tile_size_name
+    createdAt
+    updatedAt
+    deletedAt
+
+Tiles:
+    tile_id
+    tile_type_id FK (Tile_Type)
+    tile_size_id FK (Tile_Sizes)
+    tile_name
+    tile_photo
+    createdAt
+    updatedAt
+    deletedAt
+
+Sanitary_Ware:
+    sanitary_ware_id
+    sanitary_ware_name
+    sanitary_ware_photo
+    createdAt
+    updatedAt
+    deletedAt
+
+Brochure:
+    brochure_id
+    brochure_name
+    brochure_pdf
+    createdAt
+    updatedAt
+    deletedAt
