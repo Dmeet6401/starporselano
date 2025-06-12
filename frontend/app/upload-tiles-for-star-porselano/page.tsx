@@ -256,7 +256,7 @@ export default function TilesPage() {
       case "tileSize":
         const tileSize = tileSizes.find((s) => s.tile_size_id.toString() === id);
         if (tileSize) {
-          setNewTileSize(tileSize.tile_size);
+          setNewTileSize(tileSize.tile_size_name);
         }
         break;
       case "tile":
