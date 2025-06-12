@@ -278,15 +278,16 @@ export default function TilesPage() {
     if (!newTileType.trim()) return;
   
     try {
+        const method = editMode && editId ? "PUT" : "POST";
         const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-type`
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-type/${editId}`
             : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile-type`;
 
         const response = await fetch(endpoint, {
-            method: "POST",
+            method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(editMode && editId 
-                ? { tile_type_id: editId, tile_type_name: newTileType }
+                ? { tile_type_name: newTileType }
                 : { tile_type_name: newTileType }
             ),
         });
@@ -334,15 +335,16 @@ const handleAddTileSize = async (e: React.FormEvent) => {
     if (!newTileSize.trim()) return;
   
     try {
+        const method = editMode && editId ? "PUT" : "POST";
         const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-size`
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-size/${editId}`
             : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile-size`;
 
         const response = await fetch(endpoint, {
-            method: "POST",
+            method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(editMode && editId
-                ? { tile_size_id: editId, tile_size: newTileSize }
+                ? { tile_size: newTileSize }
                 : { tile_size: newTileSize, tile_size_name: newTileSize }
             ),
         });
@@ -400,12 +402,13 @@ const handleAddTile = async (e: React.FormEvent) => {
             formData.append('image', newTile.image);
         }
 
+        const method = editMode && editId ? "PUT" : "POST";
         const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile`
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile/${editId}`
             : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
 
         const response = await fetch(endpoint, {
-            method: "POST",
+            method,
             body: formData,
         });
   
@@ -461,15 +464,16 @@ const handleAddSanitaryType = async (e: React.FormEvent) => {
     if (!newSanitaryType.trim()) return;
   
     try {
+        const method = editMode && editId ? "PUT" : "POST";
         const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary-type`
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary-type/${editId}`
             : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/add-sanitary-type`;
 
         const response = await fetch(endpoint, {
-            method: "POST",
+            method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(editMode && editId
-                ? { sanitary_type_id: editId, sanitary_type_name: newSanitaryType }
+                ? { sanitary_type_name: newSanitaryType }
                 : { sanitary_type_name: newSanitaryType }
             ),
         });
@@ -525,12 +529,13 @@ const handleAddSanitary = async (e: React.FormEvent) => {
             formData.append('image', newSanitary.image);
         }
 
+        const method = editMode && editId ? "PUT" : "POST";
         const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary`
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary/${editId}`
             : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/add-sanitary`;
 
         const response = await fetch(endpoint, {
-            method: "POST",
+            method,
             body: formData,
         });
   
