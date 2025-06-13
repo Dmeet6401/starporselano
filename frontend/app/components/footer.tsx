@@ -15,7 +15,7 @@ export default function Footer() {
               <span className="text-xl font-bold">Star Porselano</span>
             </div>
             <p className="text-gray-400 leading-relaxed">
-              Leading manufacturer and exporter of premium porcelain tiles and ceramic products, serving customers
+              Exporter of premium porcelain tiles and ceramic products, serving customers
               worldwide with quality and excellence.
             </p>
             <div className="flex space-x-4">
@@ -73,15 +73,15 @@ export default function Footer() {
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-400">123 Industrial Area, Ceramic City, Gujarat, India - 382350</span>
+                <span className="text-gray-400">Star Plaza, Ground Floor,Shop No.3, B/h. Vishal Furniture,8-A, National Highway, MORBI - 363 642</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <span className="text-gray-400">+91 98765 43210</span>
+                <span className="text-gray-400">+91 99980 22554</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <span className="text-gray-400">info@starporselano.com</span>
+                <span className="text-gray-400">starporselano@gmail.com</span>
               </div>
             </div>
           </div>

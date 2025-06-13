@@ -92,8 +92,9 @@ export default function ContactUs() {
                   <div className="flex items-start space-x-3">
                     <MapPin className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
                     <div className="text-gray-700">
-                      <p>Office No. 6 1st Floor Star Ceramic Plaza</p>
-                      <p>Wing E, Near Lalpar, Gujarat 363641</p>
+                      <p>Star Plaza, Ground Floor, Shop No.3,
+                      B/h. Vishal Furniture,</p>
+                      <p>8-A, National Highway, MORBI - 363 642</p>
                     </div>
                   </div>
                 </div>
@@ -101,7 +102,7 @@ export default function ContactUs() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <Phone className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700">+91 985 982 4444</span>
+                    <span className="text-gray-700">+91 99980 22554</span>
                   </div>
 
                   <div className="flex items-center space-x-3">
@@ -120,14 +121,10 @@ export default function ContactUs() {
                   <h4 className="font-semibold text-gray-900 mb-3">Other Departments</h4>
                   <div className="space-y-2 text-sm text-gray-600">
                     <p>
-                      <strong>Sales:</strong> sales@starporselano.com
+                      <strong>e-mail Us: </strong>starporselano@gmail.com
                     </p>
-                    <p>
-                      <strong>Support:</strong> support@starporselano.com
-                    </p>
-                    <p>
-                      <strong>Logistics:</strong> logistics@starporselano.com
-                    </p>
+                    
+                    
                   </div>
                 </div>
               </div>
@@ -227,7 +224,7 @@ export default function ContactUs() {
 
           <div className="bg-gray-200 rounded-lg overflow-hidden" style={{ height: "400px" }}>
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3671.5234567890123!2d72.5877!3d23.0225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDAxJzIxLjAiTiA3MsKwMzUnMTUuNyJF!5e0!3m2!1sen!2sin!4v1234567890123"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.5684917518806!2d70.86128357476423!3d22.818447723915895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39598dcfbdc39d41%3A0x6ca9f78926f19f81!2sVishal%20Furniture!5e0!3m2!1sen!2sin!4v1749814351191!5m2!1sen!2sin" 
               width="100%"
               height="100%"
               style={{ border: 0 }}

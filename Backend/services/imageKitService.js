@@ -7,18 +7,22 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-const uploadImage = async (file, fileName) => {
+const fs = require("fs");
+const path = require("path");
+
+
+const uploadFileToImageKit = async (filePath, fileName) => {
   try {
-    const result = await imagekit.upload({
-      file,       // can be base64, URL, or filepath
-      fileName,   // desired file name
+    const response = await imagekit.upload({
+      file: fs.readFileSync(filePath),
+      fileName: fileName,
+      useUniqueFileName: true,  // Optional: to ensure unique names
     });
-    return result;
+    return response.url;  // URL of the uploaded file
   } catch (error) {
-    throw error;
+    throw new Error("Error uploading file to ImageKit: " + error.message);
   }
 };
 
-module.exports = {
-  uploadImage,
-};
+module.exports = { uploadFileToImageKit };
+

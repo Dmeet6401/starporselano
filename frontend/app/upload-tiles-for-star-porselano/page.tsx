@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import axios from "axios";
 
 interface TileType {
   tile_type_id: number;
@@ -56,6 +57,13 @@ interface Sanitary {
   image_url?: string;
 }
 
+interface Brochure {
+  brochure_id: number;
+  brochure_name: string;
+  brochure_pdf: string; // or JSONB if multiple files
+  tile_size_id: number;
+}
+
 export default function TilesPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -65,6 +73,7 @@ export default function TilesPage() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [sanitaryTypes, setSanitaryTypes] = useState<SanitaryType[]>([]);
   const [sanitaryItems, setSanitaryItems] = useState<Sanitary[]>([]);
+  const [brochures, setBrochures] = useState<Brochure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [newTileType, setNewTileType] = useState("");
@@ -96,6 +105,16 @@ export default function TilesPage() {
     image: undefined,
   });
 
+  const [newBrochure, setNewBrochure] = useState<{
+    name: string;
+    file?: File;
+    tileSize: string;
+  }>({
+    name: "",
+    file: undefined,
+    tileSize: "",
+  });
+
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -119,12 +138,14 @@ export default function TilesPage() {
       description: "",
       image: undefined,
     });
+    setNewBrochure({ name: "", file: undefined, tileSize: "" });
     setEditMode(false);
     setEditId(null);
   };
 
   useEffect(() => {
     fetchData();
+    fetchBrochures();
     
     // Handle productId from URL if present
     if (productId) {
@@ -223,6 +244,16 @@ export default function TilesPage() {
         description: "Failed to fetch product data. Please try again later.",
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchBrochures = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/get-all-brochures`);
+      const data = await res.json();
+      if (data.brochures) setBrochures(data.brochures);
+    } catch (error) {
+      console.error("Error fetching brochures:", error);
     }
   };
 
@@ -584,6 +615,28 @@ const handleAddSanitary = async (e: React.FormEvent) => {
     }
 };
   
+const handleAddBrochure = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newBrochure.name || !newBrochure.file || !newBrochure.tileSize) return;
+  try {
+    const formData = new FormData();
+    formData.append('brochure_name', newBrochure.name);
+    formData.append('tile_size_id', newBrochure.tileSize);
+    formData.append('brochure_pdf', newBrochure.file);
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/add-brochure`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    toast({ title: "Success", description: "Brochure added successfully" });
+    setNewBrochure({ name: "", file: undefined, tileSize: "" });
+    fetchBrochures();
+    console.log('Brochure uploaded:', response.data);
+  } catch (error) {
+    console.error("Error adding brochure:", error);
+    toast({ title: "Error", description: "Failed to add brochure. Please try again later.", variant: "destructive" });
+  }
+};
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
@@ -696,12 +749,13 @@ const handleAddSanitary = async (e: React.FormEvent) => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="types" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="types">Tile Types</TabsTrigger>
               <TabsTrigger value="sizes">Tile Sizes</TabsTrigger>
               <TabsTrigger value="tiles">Tiles</TabsTrigger>
               <TabsTrigger value="sanitaryTypes">Sanitary Types</TabsTrigger>
               <TabsTrigger value="sanitary">Sanitary</TabsTrigger>
+              <TabsTrigger value="brochures">Brochures</TabsTrigger>
             </TabsList>
 
             <TabsContent value="types">
@@ -896,8 +950,6 @@ const handleAddSanitary = async (e: React.FormEvent) => {
                         ))}
                       </select>
                     </div>
-
-
 
                     <div className="space-y-2">
                       <Label htmlFor="tileImage">Tile Image (.jpg, .jpeg)</Label>
@@ -1220,6 +1272,78 @@ const handleAddSanitary = async (e: React.FormEvent) => {
                         ))
                       ) : (
                         <p>No sanitary items available</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="brochures">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add Brochure</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddBrochure} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="brochureName">Brochure Name</Label>
+                      <Input
+                        id="brochureName"
+                        value={newBrochure.name}
+                        onChange={(e) => setNewBrochure({ ...newBrochure, name: e.target.value })}
+                        placeholder="Enter brochure name"
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="brochureFile">Upload Brochure (PDF)</Label>
+                      <Input
+                        id="brochureFile"
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setNewBrochure({ ...newBrochure, file });
+                          } else {
+                            alert("Only PDF files are allowed");
+                          }
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="brochureTileSize">Tile Size</Label>
+                      <select
+                        id="brochureTileSize"
+                        className="w-full p-2 border rounded-md"
+                        value={newBrochure.tileSize}
+                        onChange={(e) => setNewBrochure({ ...newBrochure, tileSize: e.target.value })}
+                      >
+                        <option value="">Select Tile Size</option>
+                        {tileSizes.map((size) => (
+                          <option key={size.tile_size_id} value={size.tile_size_id}>
+                            {size.tile_size_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button type="submit" className="w-full">Add Brochure</Button>
+                  </form>
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">Existing Brochures</h3>
+                    <div className="grid gap-3">
+                      {brochures.length > 0 ? (
+                        brochures.map((brochure) => (
+                          <div key={brochure.brochure_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                            <span className="font-medium">{brochure.brochure_name}</span>
+                            <span className="text-sm text-gray-500 ml-2">{tileSizes.find((s) => s.tile_size_id === brochure.tile_size_id)?.tile_size_name}</span>
+                            <a href={brochure.brochure_pdf} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-4">View PDF</a>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-gray-500">No brochures available</p>
                       )}
                     </div>
                   </div>

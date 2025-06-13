@@ -241,11 +241,41 @@ const Brochure = sequelize.define('Brochure', {
     timestamps: true
 })
 
+const Document = sequelize.define('Document', {
+  document_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  document_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  document_url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  tile_size_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: TileSize,
+      key: 'tile_size_id'
+    }
+  }
+}, {
+  tableName: 'documents',
+  timestamps: true
+});
+
 // Associations
 TileType.hasMany(Tile, { foreignKey: 'tile_type_id' });
 TileSize.hasMany(Tile, { foreignKey: 'tile_size_id' });
 Tile.belongsTo(TileType, { foreignKey: 'tile_type_id' });
 Tile.belongsTo(TileSize, { foreignKey: 'tile_size_id' });
+
+Tile.hasMany(Document, { foreignKey: 'tile_id' });
+Document.belongsTo(Tile, { foreignKey: 'tile_id' });
 
 // Sync models with database
 sequelize.sync()
@@ -260,5 +290,6 @@ module.exports = {
   TileSize,
   Sanitary_Ware,
   Sanitary_Type,
-  Brochure
+  Brochure,
+  Document
 };

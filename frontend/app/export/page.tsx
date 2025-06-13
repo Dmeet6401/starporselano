@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Globe, Ship, FileText, Shield, Clock, Award, MapPin, Truck, Package, CheckCircle } from "lucide-react"
+import HeroSection from "../components/hero-section"
 
 export default function Export() {
   const exportCountries = [
@@ -67,17 +68,15 @@ export default function Export() {
   return (
     <div className="min-h-screen">
       <Header />
+      <HeroSection
+        title="Global Export Excellence"
+        subtitle="Star Porselano has been a trusted export partner for over 25 years, delivering premium ceramic and porcelain tiles to customers across 50+ countries worldwide."
+      />
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-blue-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Global Export Excellence</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Star Porselano has been a trusted export partner for over 25 years, delivering premium ceramic and
-              porcelain tiles to customers across 50+ countries worldwide.
-            </p>
-          </div>
+          
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
