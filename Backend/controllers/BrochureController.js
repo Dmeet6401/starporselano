@@ -1,6 +1,4 @@
-const db = require('../models/index');
-
-const Brochure = db.Brochure;
+const { Brochure } = require('../models');
 
 const addBrochure = async (req, res) => {
     try {
@@ -14,14 +12,25 @@ const addBrochure = async (req, res) => {
 
 const getAllBrochure = async (req, res) => {
     try {
-        const brochure = await Brochure.findAll();
+        const brochure = await Brochure.find({ is_deleted: false }).populate('tile_size_id');
         res.status(200).json({ brochure });
     } catch (error) {
         res.status(500).json({ message: 'Failed to get brochure', error: error.message });
     }
 }
 
+const deleteBrochure = async (req, res) => {
+    try {
+        const { brochure_id } = req.params;
+        await Brochure.findByIdAndUpdate(brochure_id, { is_deleted: true });
+        res.status(200).json({ message: 'Brochure deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to delete brochure', error: error.message });
+    }
+}
+
 module.exports = {
     addBrochure,
-    getAllBrochure
+    getAllBrochure,
+    deleteBrochure
 }

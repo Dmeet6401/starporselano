@@ -1,9 +1,4 @@
-const db = require('../models/index');
-
-const Tile = db.Tile;
-const TileType = db.TileType;
-const TileSize = db.TileSize;
-
+const { Tile, TileType, TileSize } = require('../models');
 
 const addTileType = async (req, res) => {
     try {
@@ -17,7 +12,7 @@ const addTileType = async (req, res) => {
 
 const getAllTileTypes = async (req, res) => {
     try {
-        const tileTypes = await TileType.findAll();
+        const tileTypes = await TileType.find({ is_deleted: false });
         res.status(200).json({ tileTypes });
     } catch (error) {
         res.status(500).json({ message: 'Failed to get tile types', error: error.message });
@@ -36,7 +31,7 @@ const addTileSize = async (req, res) => {
 
 const getAllTileSizes = async (req, res) => {
     try {
-        const tileSizes = await TileSize.findAll();
+        const tileSizes = await TileSize.find({ is_deleted: false });
         res.status(200).json({ tileSizes });
     } catch (error) {
         res.status(500).json({ message: 'Failed to get tile sizes', error: error.message });
@@ -51,15 +46,14 @@ const addTile = async (req, res) => {
             tile_name,
             tile_type_id,
             tile_size_id,
-            description,
-            tile_photo // This will be the ImageKit URL
+            tile_photo
         });
 
         res.status(201).json({ 
             message: 'Tile added successfully', 
             tile: {
-                ...tile.toJSON(),
-                image_url: tile.tile_photo // Add image_url for frontend consistency
+                ...tile.toObject(),
+                image_url: tile.tile_photo
             }
         });
     } catch (error) {
@@ -101,12 +95,14 @@ const getTiles = async (req, res) => {
     try {
         const { tile_type_id, tile_size_id } = req.params;
 
-        // Build dynamic where clause based on available parameters
-        const whereClause = {};
-        if (tile_type_id) whereClause.tile_type_id = tile_type_id;
-        if (tile_size_id) whereClause.tile_size_id = tile_size_id;
+        // Build query based on available parameters
+        const query = { is_deleted: false };
+        if (tile_type_id) query.tile_type_id = tile_type_id;
+        if (tile_size_id) query.tile_size_id = tile_size_id;
 
-        const tiles = await Tile.findAll({ where: whereClause });
+        const tiles = await Tile.find(query)
+            .populate('tile_type_id')
+            .populate('tile_size_id');
 
         res.status(200).json({ tiles });
     } catch (error) {
@@ -117,7 +113,7 @@ const getTiles = async (req, res) => {
 const deleteTileType = async (req, res) => {
     try {
         const { tile_type_id } = req.params;
-        await TileType.destroy({ where: { tile_type_id } });
+        await TileType.findByIdAndUpdate(tile_type_id, { is_deleted: true });
         res.status(200).json({ message: 'Tile type deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete tile type', error: error.message });
@@ -127,7 +123,7 @@ const deleteTileType = async (req, res) => {
 const deleteTileSize = async (req, res) => {
     try {
         const { tile_size_id } = req.params;
-        await TileSize.destroy({ where: { tile_size_id } });
+        await TileSize.findByIdAndUpdate(tile_size_id, { is_deleted: true });
         res.status(200).json({ message: 'Tile size deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete tile size', error: error.message });
@@ -137,7 +133,7 @@ const deleteTileSize = async (req, res) => {
 const deleteTile = async (req, res) => {
     try {
         const { tile_id } = req.params;
-        await Tile.destroy({ where: { tile_id } });
+        await Tile.findByIdAndUpdate(tile_id, { is_deleted: true });
         res.status(200).json({ message: 'Tile deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete tile', error: error.message });
@@ -153,12 +149,16 @@ const editTileType = async (req, res) => {
             return res.status(400).json({ message: 'tile_type_name is required' });
         }
 
-        const tileType = await TileType.findByPk(tile_type_id);
+        const tileType = await TileType.findOneAndUpdate(
+            { _id: tile_type_id, is_deleted: false },
+            { tile_type_name },
+            { new: true }
+        );
+
         if (!tileType) {
             return res.status(404).json({ message: 'Tile type not found' });
         }
 
-        await tileType.update({ tile_type_name });
         res.status(200).json({ message: 'Tile type updated successfully', tileType });
     } catch (error) {
         res.status(500).json({ message: 'Failed to update tile type', error: error.message });
@@ -168,29 +168,25 @@ const editTileType = async (req, res) => {
 const editTileSize = async (req, res) => {
     try {
         const { tile_size_id } = req.params;
-        const { tile_size } = req.body;
+        const { tile_size_name } = req.body;
         
-        if (!tile_size) {
-            return res.status(400).json({ message: 'tile_size is required' });
+        if (!tile_size_name) {
+            return res.status(400).json({ message: 'tile_size_name is required' });
         }
 
-        const tileSize = await TileSize.findByPk(tile_size_id);
+        const tileSize = await TileSize.findOneAndUpdate(
+            { _id: tile_size_id, is_deleted: false },
+            { tile_size_name },
+            { new: true }
+        );
+
         if (!tileSize) {
             return res.status(404).json({ message: 'Tile size not found' });
         }
 
-        // Update both tile_size and tile_size_name with the same value
-        await tileSize.update({ 
-            tile_size: tile_size,
-            tile_size_name: tile_size // Use the same value for both fields
-        });
-
-        // Fetch the updated record to ensure we have the latest data
-        const updatedTileSize = await TileSize.findByPk(tile_size_id);
-        
         res.status(200).json({ 
             message: 'Tile size updated successfully', 
-            tileSize: updatedTileSize 
+            tileSize 
         });
     } catch (error) {
         res.status(500).json({ message: 'Failed to update tile size', error: error.message });
@@ -202,27 +198,27 @@ const editTile = async (req, res) => {
         const { tile_id } = req.params;
         const { tile_name, tile_type_id, tile_size_id, tile_photo } = req.body;
 
-        const tile = await Tile.findByPk(tile_id);
+        const updateData = {};
+        if (tile_name) updateData.tile_name = tile_name;
+        if (tile_type_id) updateData.tile_type_id = tile_type_id;
+        if (tile_size_id) updateData.tile_size_id = tile_size_id;
+        if (tile_photo) updateData.tile_photo = tile_photo;
+
+        const tile = await Tile.findOneAndUpdate(
+            { _id: tile_id, is_deleted: false },
+            updateData,
+            { new: true }
+        );
+
         if (!tile) {
             return res.status(404).json({ message: 'Tile not found' });
         }
 
-        await tile.update({
-            tile_name: tile_name || tile.tile_name,
-            tile_type_id: tile_type_id || tile.tile_type_id,
-            tile_size_id: tile_size_id || tile.tile_size_id,
-            // description: description || tile.description,
-            tile_photo: tile_photo || tile.tile_photo // Update image URL if provided
-        });
-
-        // Fetch the updated record to ensure we have the latest data
-        const updatedTile = await Tile.findByPk(tile_id);
-        
         res.status(200).json({ 
             message: 'Tile updated successfully', 
             tile: {
-                ...updatedTile.toJSON(),
-                image_url: updatedTile.tile_photo // Add image_url for frontend consistency
+                ...tile.toObject(),
+                image_url: tile.tile_photo
             }
         });
     } catch (error) {

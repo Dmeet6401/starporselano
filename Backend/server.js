@@ -1,9 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const sequelize = require('./config/database');
+const connectDB = require('./config/database');
 const imageRoutes = require("./routes/ImageRoutes");
-const sanitaryRoutes = require("./routes/SanitaryRoutes");
 const brochureRoutes = require("./routes/BrochureRoute");
 
 require('dotenv').config();
@@ -24,7 +23,6 @@ app.get('/', (req, res) => {
 
 app.use('/api/tile', tileRoutes);
 app.use("/api/images", imageRoutes);
-app.use("/api/sanitary", sanitaryRoutes);
 app.use("/api/brochure", brochureRoutes);
 
 // Database connection and server start
@@ -32,13 +30,9 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    await sequelize.authenticate();
+    await connectDB();
     console.log('Database connection has been established successfully.');
     
-    // Sync database (in development, you might want to use { force: true })
-    await sequelize.sync();
-    console.log('Database synced successfully');
-
     app.listen(PORT, () => {
       console.log(`✅ Server is running at: http://localhost:${PORT}`);
     });    

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,54 +25,42 @@ import {
 import axios from "axios";
 
 interface TileType {
-  tile_type_id: number;
+  _id: string;
   tile_type_name: string;
+  is_deleted: boolean;
 }
 
 interface TileSize {
-  tile_size_id: number;
-  tile_size: string;
+  _id: string;
   tile_size_name: string;
+  is_deleted: boolean;
 }
 
 interface Tile {
-  tile_id: number;
+  _id: string;
   tile_name: string;
-  tile_type_id: number;
-  tile_size_id: number;
-  description: string;
-  image_url?: string;
-}
-
-interface SanitaryType {
-  sanitary_type_id: number;
-  sanitary_type_name: string;
-}
-
-interface Sanitary {
-  sanitary_id: number;
-  sanitary_name: string;
-  sanitary_type_id: number;
-  description: string;
-  image_url?: string;
+  tile_type_id: string;
+  tile_size_id: string;
+  tile_photo: any;
+  description?: string;
+  is_deleted: boolean;
 }
 
 interface Brochure {
-  brochure_id: number;
+  _id: string;
   brochure_name: string;
-  brochure_pdf: string; // or JSONB if multiple files
-  tile_size_id: number;
+  brochure_pdf: any;
+  tile_size_id: string;
+  is_deleted: boolean;
 }
 
-export default function TilesPage() {
+function TilesPageContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
   const [tileTypes, setTileTypes] = useState<TileType[]>([]);
   const [tileSizes, setTileSizes] = useState<TileSize[]>([]);
   const [tiles, setTiles] = useState<Tile[]>([]);
-  const [sanitaryTypes, setSanitaryTypes] = useState<SanitaryType[]>([]);
-  const [sanitaryItems, setSanitaryItems] = useState<Sanitary[]>([]);
   const [brochures, setBrochures] = useState<Brochure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -88,19 +76,6 @@ export default function TilesPage() {
     name: "",
     type: "",
     size: "",
-    description: "",
-    image: undefined,
-  });
-
-  const [newSanitaryType, setNewSanitaryType] = useState("");
-  const [newSanitary, setNewSanitary] = useState<{
-    name: string;
-    type: string;
-    description: string;
-    image?: File;
-  }>({
-    name: "",
-    type: "",
     description: "",
     image: undefined,
   });
@@ -128,13 +103,6 @@ export default function TilesPage() {
       name: "",
       type: "",
       size: "",
-      description: "",
-      image: undefined,
-    });
-    setNewSanitaryType("");
-    setNewSanitary({
-      name: "",
-      type: "",
       description: "",
       image: undefined,
     });
@@ -173,32 +141,23 @@ export default function TilesPage() {
         tileTypesResponse,
         tileSizesResponse,
         tilesResponse,
-        sanitaryTypesResponse,
-        sanitaryItemsResponse,
       ] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/get-all-tile-types`),
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/get-all-tile-sizes`),
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/get-all-tiles`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/get-sanitary-type`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/get-sanitary`),
       ]);
 
-      if (!tileTypesResponse.ok || !tileSizesResponse.ok || !tilesResponse.ok || 
-          !sanitaryTypesResponse.ok || !sanitaryItemsResponse.ok) {
+      if (!tileTypesResponse.ok || !tileSizesResponse.ok || !tilesResponse.ok) {
         throw new Error('Failed to fetch data');
       }
 
       const tileTypesData = await tileTypesResponse.json();
       const tileSizesData = await tileSizesResponse.json();
       const tilesData = await tilesResponse.json();
-      const sanitaryTypesData = await sanitaryTypesResponse.json();
-      const sanitaryItemsData = await sanitaryItemsResponse.json();
 
       setTileTypes(tileTypesData.tileTypes || []);
       setTileSizes(tileSizesData.tileSizes || []);
       setTiles(tilesData.tiles || []);
-      setSanitaryTypes(sanitaryTypesData.sanitaryTypes || []);
-      setSanitaryItems(sanitaryItemsData.sanitaryItems || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -262,42 +221,35 @@ export default function TilesPage() {
     setEditId(id);
 
     switch (type) {
-      case "sanitaryType":
-        const sanitaryType = sanitaryTypes.find((t) => t.sanitary_type_id.toString() === id);
-        if (sanitaryType) {
-          setNewSanitaryType(sanitaryType.sanitary_type_name);
-        }
-        break;
-      case "sanitary":
-        const sanitary = sanitaryItems.find((t) => t.sanitary_id.toString() === id);
-        if (sanitary) {
-          setNewSanitary({
-            name: sanitary.sanitary_name,
-            type: sanitary.sanitary_type_id.toString(),
-            description: sanitary.description,
-          });
-        }
-        break;
       case "tileType":
-        const tileType = tileTypes.find((t) => t.tile_type_id.toString() === id);
+        const tileType = tileTypes.find((t) => t._id === id);
         if (tileType) {
           setNewTileType(tileType.tile_type_name);
         }
         break;
       case "tileSize":
-        const tileSize = tileSizes.find((s) => s.tile_size_id.toString() === id);
+        const tileSize = tileSizes.find((s) => s._id === id);
         if (tileSize) {
           setNewTileSize(tileSize.tile_size_name);
         }
         break;
       case "tile":
-        const tile = tiles.find((t) => t.tile_id.toString() === id);
+        const tile = tiles.find((t) => t._id === id);
         if (tile) {
           setNewTile({
             name: tile.tile_name,
-            type: tile.tile_type_id.toString(),
-            size: tile.tile_size_id.toString(),
-            description: tile.description,
+            type: tile.tile_type_id,
+            size: tile.tile_size_id,
+            description: tile.description || "",
+          });
+        }
+        break;
+      case "brochure":
+        const brochure = brochures.find((b) => b._id === id);
+        if (brochure) {
+          setNewBrochure({
+            name: brochure.brochure_name,
+            tileSize: brochure.tile_size_id,
           });
         }
         break;
@@ -330,7 +282,7 @@ export default function TilesPage() {
         if (editMode && editId) {
             setTileTypes(
                 tileTypes.map((type) =>
-                    type.tile_type_id.toString() === editId 
+                    type._id === editId 
                         ? { ...type, tile_type_name: newTileType } 
                         : type
                 )
@@ -341,8 +293,9 @@ export default function TilesPage() {
             });
         } else {
             const newType: TileType = {
-                tile_type_id: data.tileType.tile_type_id,
+                _id: data.tileType._id,
                 tile_type_name: newTileType,
+                is_deleted: false,
             };
             setTileTypes([...tileTypes, newType]);
             toast({
@@ -362,257 +315,154 @@ export default function TilesPage() {
 };
   
 const handleAddTileSize = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTileSize.trim()) return;
-  
-    try {
-        const method = editMode && editId ? "PUT" : "POST";
-        const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-size/${editId}`
-            : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile-size`;
+  e.preventDefault();
+  if (!newTileSize) {
+    toast({
+      title: "Error",
+      description: "Please enter a tile size",
+      variant: "destructive",
+    });
+    return;
+  }
 
-        const response = await fetch(endpoint, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editMode && editId
-                ? { tile_size: newTileSize }
-                : { tile_size: newTileSize, tile_size_name: newTileSize }
-            ),
-        });
-  
-        if (!response.ok) throw new Error("Failed to add/update tile size");
-  
-        const data = await response.json();
-  
-        if (editMode && editId) {
-            setTileSizes(
-                tileSizes.map((size) =>
-                    size.tile_size_id.toString() === editId 
-                        ? { ...size, tile_size: newTileSize, tile_size_name: newTileSize } 
-                        : size
-                )
-            );
-            toast({
-                title: "Success",
-                description: "Tile size updated successfully",
-            });
-        } else {
-            const newSize: TileSize = {
-                tile_size_id: data.tileSize.tile_size_id,
-                tile_size: newTileSize,
-                tile_size_name: newTileSize,
-            };
-            setTileSizes([...tileSizes, newSize]);
-            toast({
-                title: "Success",
-                description: "Tile size added successfully",
-            });
-        }
-        resetForm();
-    } catch (error) {
-        console.error("Error:", error);
-        toast({
-            title: "Error",
-            description: "Failed to add/update tile size. Please try again later.",
-            variant: "destructive",
-        });
+  try {
+    const url = editMode
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile-size/${editId}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile-size`;
+
+    const response = await fetch(url, {
+      method: editMode ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tile_size_name: newTileSize,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save tile size");
     }
+
+    const data = await response.json();
+
+    if (editMode) {
+      setTileSizes(
+        tileSizes.map((size) =>
+          size._id === editId
+            ? { ...size, tile_size_name: newTileSize }
+            : size
+        )
+      );
+    } else {
+      const newSize: TileSize = {
+        _id: data.tileSize._id,
+        tile_size_name: newTileSize,
+        is_deleted: false,
+      };
+      setTileSizes([...tileSizes, newSize]);
+    }
+
+    toast({
+      title: "Success",
+      description: editMode
+        ? "Tile size updated successfully"
+        : "Tile size added successfully",
+    });
+
+    resetForm();
+  } catch (error) {
+    console.error("Error saving tile size:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save tile size. Please try again.",
+      variant: "destructive",
+    });
+  }
 };
   
 const handleAddTile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTile.name || !newTile.type || !newTile.size) return;
-  
-    try {
-        const formData = new FormData();
-        formData.append('tile_name', newTile.name);
-        formData.append('tile_type_id', newTile.type);
-        formData.append('tile_size_id', newTile.size);
-        formData.append('description', newTile.description);
-        if (newTile.image) {
-            formData.append('image', newTile.image);
-        }
+  e.preventDefault();
+  if (!newTile.name || !newTile.type || !newTile.size) {
+    toast({
+      title: "Error",
+      description: "Please fill in all required fields",
+      variant: "destructive",
+    });
+    return;
+  }
 
-        const method = editMode && editId ? "PUT" : "POST";
-        const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile/${editId}`
-            : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
+  try {
+    const formData = new FormData();
+    formData.append("tile_name", newTile.name);
+    formData.append("tile_type_id", newTile.type);
+    formData.append("tile_size_id", newTile.size);
+    if (newTile.description) {
+      formData.append("description", newTile.description);
+    }
+    if (newTile.image) {
+      formData.append("tile_photo", newTile.image);
+    }
 
-        const response = await fetch(endpoint, {
-            method,
-            body: formData,
-        });
-  
-        if (!response.ok) throw new Error("Failed to add/update tile");
-  
-        const data = await response.json();
-  
-        if (editMode && editId) {
-            setTiles(
-                tiles.map((tile) =>
-                    tile.tile_id.toString() === editId ? {
-                        ...tile,
-                        tile_name: newTile.name,
-                        tile_type_id: parseInt(newTile.type),
-                        tile_size_id: parseInt(newTile.size),
-                        description: newTile.description,
-                        image_url: data.tile.image_url || tile.image_url
-                    } : tile
-                )
-            );
-            toast({
-                title: "Success",
-                description: "Tile updated successfully",
-            });
-        } else {
-            const newTileItem: Tile = {
-                tile_id: data.tile.tile_id,
+    const url = editMode
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile/${editId}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
+
+    const response = await fetch(url, {
+      method: editMode ? "PUT" : "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save tile");
+    }
+
+    const data = await response.json();
+
+    if (editMode) {
+      setTiles(
+        tiles.map((tile) =>
+          tile._id === editId
+            ? {
+                ...tile,
                 tile_name: newTile.name,
-                tile_type_id: parseInt(newTile.type),
-                tile_size_id: parseInt(newTile.size),
-                description: newTile.description,
-                image_url: data.tile.image_url
-            };
-            setTiles([...tiles, newTileItem]);
-            toast({
-                title: "Success",
-                description: "Tile added successfully",
-            });
-        }
-        resetForm();
-    } catch (error) {
-        console.error("Error:", error);
-        toast({
-            title: "Error",
-            description: "Failed to add/update tile. Please try again later.",
-            variant: "destructive",
-        });
+                tile_type_id: newTile.type,
+                tile_size_id: newTile.size,
+                description: newTile.description || "",
+                tile_photo: data.tile.tile_photo || tile.tile_photo,
+              }
+            : tile
+        )
+      );
+    } else {
+      const newTileItem: Tile = {
+        _id: data.tile._id,
+        tile_name: newTile.name,
+        tile_type_id: newTile.type,
+        tile_size_id: newTile.size,
+        description: newTile.description || "",
+        tile_photo: data.tile.tile_photo,
+        is_deleted: false,
+      };
+      setTiles([...tiles, newTileItem]);
     }
-};
-  
-const handleAddSanitaryType = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSanitaryType.trim()) return;
-  
-    try {
-        const method = editMode && editId ? "PUT" : "POST";
-        const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary-type/${editId}`
-            : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/add-sanitary-type`;
 
-        const response = await fetch(endpoint, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editMode && editId
-                ? { sanitary_type_name: newSanitaryType }
-                : { sanitary_type_name: newSanitaryType }
-            ),
-        });
-  
-        if (!response.ok) throw new Error("Failed to add/update sanitary type");
-  
-        const data = await response.json();
-  
-        if (editMode && editId) {
-            setSanitaryTypes(
-                sanitaryTypes.map((type) =>
-                    type.sanitary_type_id.toString() === editId 
-                        ? { ...type, sanitary_type_name: newSanitaryType } 
-                        : type
-                )
-            );
-            toast({
-                title: "Success",
-                description: "Sanitary type updated successfully",
-            });
-        } else {
-            const newType: SanitaryType = {
-                sanitary_type_id: data.sanitaryType.sanitary_type_id,
-                sanitary_type_name: newSanitaryType,
-            };
-            setSanitaryTypes([...sanitaryTypes, newType]);
-            toast({
-                title: "Success",
-                description: "Sanitary type added successfully",
-            });
-        }
-        resetForm();
-    } catch (error) {
-        console.error("Error:", error);
-        toast({
-            title: "Error",
-            description: "Failed to add/update sanitary type. Please try again later.",
-            variant: "destructive",
-        });
-    }
-};
-  
-const handleAddSanitary = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSanitary.name || !newSanitary.type) return;
-  
-    try {
-        const formData = new FormData();
-        formData.append('sanitary_name', newSanitary.name);
-        formData.append('sanitary_type_id', newSanitary.type);
-        formData.append('description', newSanitary.description);
-        if (newSanitary.image) {
-            formData.append('image', newSanitary.image);
-        }
+    toast({
+      title: "Success",
+      description: editMode
+        ? "Tile updated successfully"
+        : "Tile added successfully",
+    });
 
-        const method = editMode && editId ? "PUT" : "POST";
-        const endpoint = editMode && editId
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/edit-sanitary/${editId}`
-            : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/add-sanitary`;
-
-        const response = await fetch(endpoint, {
-            method,
-            body: formData,
-        });
-  
-        if (!response.ok) throw new Error("Failed to add/update sanitary");
-  
-        const data = await response.json();
-  
-        if (editMode && editId) {
-            setSanitaryItems(
-                sanitaryItems.map((item) =>
-                    item.sanitary_id.toString() === editId ? {
-                        ...item,
-                        sanitary_name: newSanitary.name,
-                        sanitary_type_id: parseInt(newSanitary.type),
-                        description: newSanitary.description,
-                        image_url: data.sanitaryWare.image_url || item.image_url
-                    } : item
-                )
-            );
-            toast({
-                title: "Success",
-                description: "Sanitary updated successfully",
-            });
-        } else {
-            const newItem: Sanitary = {
-                sanitary_id: data.sanitaryWare.sanitary_id,
-                sanitary_name: newSanitary.name,
-                sanitary_type_id: parseInt(newSanitary.type),
-                description: newSanitary.description,
-                image_url: data.sanitaryWare.image_url
-            };
-            setSanitaryItems([...sanitaryItems, newItem]);
-            toast({
-                title: "Success",
-                description: "Sanitary added successfully",
-            });
-        }
-        resetForm();
-    } catch (error) {
-        console.error("Error:", error);
-        toast({
-            title: "Error",
-            description: "Failed to add/update sanitary. Please try again later.",
-            variant: "destructive",
-        });
-    }
+    resetForm();
+  } catch (error) {
+    console.error("Error saving tile:", error);
+    toast({
+      title: "Error",
+      description: "Failed to save tile. Please try again.",
+      variant: "destructive",
+    });
+  }
 };
   
 const handleAddBrochure = async (e: React.FormEvent) => {
@@ -644,28 +494,12 @@ const handleAddBrochure = async (e: React.FormEvent) => {
     try {
         let response;
         switch (itemToDelete.type) {
-            case "sanitaryType":
-                response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/delete-sanitary-type/${itemToDelete.id}`, {
-                    method: 'DELETE'
-                });
-                if (response.ok) {
-                    setSanitaryTypes(sanitaryTypes.filter((type) => type.sanitary_type_id.toString() !== itemToDelete.id));
-                }
-                break;
-            case "sanitary":
-                response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/delete-sanitary/${itemToDelete.id}`, {
-                    method: 'DELETE'
-                });
-                if (response.ok) {
-                    setSanitaryItems(sanitaryItems.filter((item) => item.sanitary_id.toString() !== itemToDelete.id));
-                }
-                break;
             case "tileType":
                 response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/delete-tile-type/${itemToDelete.id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
-                    setTileTypes(tileTypes.filter((type) => type.tile_type_id.toString() !== itemToDelete.id));
+                    setTileTypes(tileTypes.filter((type) => type._id !== itemToDelete.id));
                 }
                 break;
             case "tileSize":
@@ -673,7 +507,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     method: 'DELETE'
                 });
                 if (response.ok) {
-                    setTileSizes(tileSizes.filter((size) => size.tile_size_id.toString() !== itemToDelete.id));
+                    setTileSizes(tileSizes.filter((size) => size._id !== itemToDelete.id));
                 }
                 break;
             case "tile":
@@ -681,7 +515,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     method: 'DELETE'
                 });
                 if (response.ok) {
-                    setTiles(tiles.filter((tile) => tile.tile_id.toString() !== itemToDelete.id));
+                    setTiles(tiles.filter((tile) => tile._id !== itemToDelete.id));
                 }
                 break;
         }
@@ -690,11 +524,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
             toast({
                 title: "Success",
                 description: `${
-                    itemToDelete.type === "sanitaryType"
-                        ? "Sanitary type"
-                        : itemToDelete.type === "sanitary"
-                        ? "Sanitary item"
-                        : itemToDelete.type === "tileType"
+                    itemToDelete.type === "tileType"
                         ? "Tile type"
                         : itemToDelete.type === "tileSize"
                         ? "Tile size"
@@ -753,8 +583,6 @@ const handleAddBrochure = async (e: React.FormEvent) => {
               <TabsTrigger value="types">Tile Types</TabsTrigger>
               <TabsTrigger value="sizes">Tile Sizes</TabsTrigger>
               <TabsTrigger value="tiles">Tiles</TabsTrigger>
-              <TabsTrigger value="sanitaryTypes">Sanitary Types</TabsTrigger>
-              <TabsTrigger value="sanitary">Sanitary</TabsTrigger>
               <TabsTrigger value="brochures">Brochures</TabsTrigger>
             </TabsList>
 
@@ -797,13 +625,13 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                       <div className="grid gap-3">
                         {tileTypes.length > 0 ? (
                           tileTypes.map((type) => (
-                            <div key={type.tile_type_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                            <div key={type._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
                               <span className="font-medium">{type.tile_type_name}</span>
                               <div className="flex gap-2">
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleEdit("tileType", type.tile_type_id.toString())}
+                                  onClick={() => handleEdit("tileType", type._id)}
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
@@ -811,7 +639,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                                   variant="ghost"
                                   size="icon"
                                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => confirmDelete("tileType", type.tile_type_id.toString())}
+                                  onClick={() => confirmDelete("tileType", type._id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -862,16 +690,16 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     <div className="grid gap-3">
                       {tileSizes.length > 0 ? (
                         tileSizes.map((size: TileSize) => (
-                          <div key={size.tile_size_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                          <div key={size._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
                             <div>
                               <span className="font-medium">{size.tile_size_name}</span>
-                              <span className="text-sm text-gray-500 ml-2">{size.tile_size}</span>
+                              <span className="text-sm text-gray-500 ml-2">{size.tile_size_name}</span>
                             </div>
                             <div className="flex gap-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleEdit("tileSize", size.tile_size_id.toString())}
+                                onClick={() => handleEdit("tileSize", size._id)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -879,7 +707,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                                 variant="ghost"
                                 size="icon"
                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => confirmDelete("tileSize", size.tile_size_id.toString())}
+                                onClick={() => confirmDelete("tileSize", size._id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -926,7 +754,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                       >
                         <option value="">Select Tile Type</option>
                         {tileTypes.map((type) => (
-                          <option key={type.tile_type_id} value={type.tile_type_id.toString()}>
+                          <option key={type._id} value={type._id}>
                             {type.tile_type_name}
                           </option>
                         ))}
@@ -936,15 +764,13 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     <div className="space-y-2">
                       <Label htmlFor="tileSize">Tile Size</Label>
                       <select
-                        className="w-full p-2 border rounded-md"
                         value={newTile.size}
-                        onChange={(e) =>
-                          setNewTile({ ...newTile, size: e.target.value })
-                        }
+                        onChange={(e) => setNewTile({ ...newTile, size: e.target.value })}
+                        className="w-full p-2 border rounded"
                       >
                         <option value="">Select Tile Size</option>
                         {tileSizes.map((size) => (
-                          <option key={size.tile_size_id} value={size.tile_size_id.toString()}>
+                          <option key={size._id} value={size._id}>
                             {size.tile_size_name}
                           </option>
                         ))}
@@ -1004,11 +830,11 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {tiles.length > 0 ? (
                         tiles.map((tile) => (
-                          <Card key={tile.tile_id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                          <Card key={tile._id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
                             <div className="relative aspect-square bg-gray-100">
-                              {tile.image_url ? (
+                              {tile.tile_photo ? (
                                 <img
-                                  src={tile.image_url}
+                                  src={tile.tile_photo}
                                   alt={tile.tile_name}
                                   className="w-full h-full object-cover"
                                 />
@@ -1035,15 +861,24 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                                         <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                                         <line x1="12" y1="22.08" x2="12" y2="12" />
                                       </svg>
-                                      <span>{tileTypes.find((t) => t.tile_type_id === tile.tile_type_id)?.tile_type_name}</span>
+                                      <span>{tileTypes.find((t) => t._id === tile.tile_type_id)?.tile_type_name}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <line x1="3" y1="9" x2="21" y2="9" />
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="h-4 w-4"
+                                      >
                                         <line x1="9" y1="21" x2="9" y2="9" />
                                       </svg>
-                                      <span>{tileSizes.find((s) => s.tile_size_id === tile.tile_size_id)?.tile_size_name}</span>
+                                      <span>{tileSizes.find((s) => s._id === tile.tile_size_id)?.tile_size_name}</span>
                                     </div>
                                   </div>
                                   {tile.description && (
@@ -1057,7 +892,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8"
-                                    onClick={() => handleEdit("tile", tile.tile_id.toString())}
+                                    onClick={() => handleEdit("tile", tile._id)}
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
@@ -1065,7 +900,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => confirmDelete("tile", tile.tile_id.toString())}
+                                    onClick={() => confirmDelete("tile", tile._id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -1076,202 +911,6 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                         ))
                       ) : (
                         <p>No tiles available</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="sanitaryTypes">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{editMode ? "Edit" : "Add"} Sanitary Type</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAddSanitaryType} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="sanitaryType">Sanitary Type Name</Label>
-                      <Input
-                        id="sanitaryType"
-                        value={newSanitaryType}
-                        onChange={(e) => setNewSanitaryType(e.target.value)}
-                        placeholder="Enter sanitary type name"
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="submit" className="flex-1">
-                        {editMode ? "Update" : "Add"} Sanitary Type
-                      </Button>
-                      {editMode && (
-                        <Button type="button" variant="outline" onClick={resetForm}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </form>
-
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold mb-4">Existing Sanitary Types</h3>
-                    <div className="grid gap-3">
-                      {sanitaryTypes.length > 0 ? (
-                        sanitaryTypes.map((type) => (
-                          <div key={type.sanitary_type_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <span className="font-medium">{type.sanitary_type_name}</span>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit("sanitaryType", type.sanitary_type_id.toString())}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => confirmDelete("sanitaryType", type.sanitary_type_id.toString())}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p>No sanitary types available</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="sanitary">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{editMode ? "Edit" : "Add"} Sanitary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAddSanitary} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="sanitaryName">Sanitary Name</Label>
-                      <Input
-                        id="sanitaryName"
-                        value={newSanitary.name}
-                        onChange={(e) => setNewSanitary({ ...newSanitary, name: e.target.value })}
-                        placeholder="Enter sanitary name"
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sanitaryType">Sanitary Type</Label>
-                      <select
-                        className="w-full p-2 border rounded-md"
-                        value={newSanitary.type}
-                        onChange={(e) =>
-                          setNewSanitary({ ...newSanitary, type: e.target.value })
-                        }
-                      >
-                        <option value="">Select Sanitary Type</option>
-                        {sanitaryTypes.map((type) => (
-                          <option key={type.sanitary_type_id} value={type.sanitary_type_id.toString()}>
-                            {type.sanitary_type_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Input
-                        id="description"
-                        value={newSanitary.description}
-                        onChange={(e) =>
-                          setNewSanitary({ ...newSanitary, description: e.target.value })
-                        }
-                        placeholder="Enter sanitary description"
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sanitaryImage">Sanitary Image (.jpg, .jpeg)</Label>
-                      <div className="flex items-center gap-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById("sanitaryImage")?.click()}
-                          className="flex-shrink-0"
-                        >
-                          Choose File
-                        </Button>
-                        <span className="text-sm text-gray-500">
-                          {newSanitary.image ? newSanitary.image.name : "No file chosen"}
-                        </span>
-                        <Input
-                          id="sanitaryImage"
-                          type="file"
-                          accept=".jpg,.jpeg"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (
-                              file &&
-                              (file.type === "image/jpeg" ||
-                                file.name.endsWith(".jpg") ||
-                                file.name.endsWith(".jpeg"))
-                            ) {
-                              setNewSanitary({ ...newSanitary, image: file });
-                            } else {
-                              alert("Only .jpg and .jpeg files are allowed");
-                            }
-                          }}
-                          className="hidden"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button type="submit" className="flex-1">
-                        {editMode ? "Update" : "Add"} Sanitary
-                      </Button>
-                      {editMode && (
-                        <Button type="button" variant="outline" onClick={resetForm}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </form>
-
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold mb-4">Existing Sanitary Items</h3>
-                    <div className="grid gap-3">
-                      {sanitaryItems.length > 0 ? (
-                        sanitaryItems.map((item) => (
-                          <div key={item.sanitary_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <span className="font-medium">{item.sanitary_name}</span>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit("sanitary", item.sanitary_id.toString())}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => confirmDelete("sanitary", item.sanitary_id.toString())}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p>No sanitary items available</p>
                       )}
                     </div>
                   </div>
@@ -1323,7 +962,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                       >
                         <option value="">Select Tile Size</option>
                         {tileSizes.map((size) => (
-                          <option key={size.tile_size_id} value={size.tile_size_id}>
+                          <option key={size._id} value={size._id}>
                             {size.tile_size_name}
                           </option>
                         ))}
@@ -1336,9 +975,9 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                     <div className="grid gap-3">
                       {brochures.length > 0 ? (
                         brochures.map((brochure) => (
-                          <div key={brochure.brochure_id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                          <div key={brochure._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
                             <span className="font-medium">{brochure.brochure_name}</span>
-                            <span className="text-sm text-gray-500 ml-2">{tileSizes.find((s) => s.tile_size_id === brochure.tile_size_id)?.tile_size_name}</span>
+                            <span className="text-sm text-gray-500 ml-2">{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
                             <a href={brochure.brochure_pdf} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-4">View PDF</a>
                           </div>
                         ))
@@ -1378,5 +1017,13 @@ const handleAddBrochure = async (e: React.FormEvent) => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function TilesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TilesPageContent />
+    </Suspense>
   );
 }
