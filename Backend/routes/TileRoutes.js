@@ -21,7 +21,6 @@ router.get('/tiles/:tile_type_id/:tile_size_id', tileController.getTiles);
 // Edit routes using PUT
 router.put('/edit-tile-type/:tile_type_id', tileController.editTileType);
 router.put('/edit-tile-size/:tile_size_id', tileController.editTileSize);
-router.put('/edit-tile/:tile_id', tileController.editTile);
 
 router.delete('/delete-tile-type/:tile_type_id', tileController.deleteTileType);
 router.delete('/delete-tile-size/:tile_size_id', tileController.deleteTileSize);

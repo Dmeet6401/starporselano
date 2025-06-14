@@ -193,36 +193,13 @@ const editTileSize = async (req, res) => {
     }
 };
 
-const editTile = async (req, res) => {
+const getSizeByTileType = async (req, res) => {
     try {
-        const { tile_id } = req.params;
-        const { tile_name, tile_type_id, tile_size_id, tile_photo } = req.body;
-
-        const updateData = {};
-        if (tile_name) updateData.tile_name = tile_name;
-        if (tile_type_id) updateData.tile_type_id = tile_type_id;
-        if (tile_size_id) updateData.tile_size_id = tile_size_id;
-        if (tile_photo) updateData.tile_photo = tile_photo;
-
-        const tile = await Tile.findOneAndUpdate(
-            { _id: tile_id, is_deleted: false },
-            updateData,
-            { new: true }
-        );
-
-        if (!tile) {
-            return res.status(404).json({ message: 'Tile not found' });
-        }
-
-        res.status(200).json({ 
-            message: 'Tile updated successfully', 
-            tile: {
-                ...tile.toObject(),
-                image_url: tile.tile_photo
-            }
-        });
+        const { tile_type_id } = req.params;
+        const tileSizes = await TileSize.find({ tile_type_id });
+        res.status(200).json({ tileSizes });
     } catch (error) {
-        res.status(500).json({ message: 'Failed to update tile', error: error.message });
+        res.status(500).json({ message: 'Failed to get tile sizes by type', error: error.message });
     }
 };
 
@@ -238,5 +215,5 @@ module.exports = {
     deleteTile,
     editTileType,
     editTileSize,
-    editTile
+    getSizeByTileType
 };

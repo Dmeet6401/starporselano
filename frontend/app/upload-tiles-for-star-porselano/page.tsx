@@ -232,17 +232,6 @@ function TilesPageContent() {
           setNewTileSize(tileSize.tile_size_name);
         }
         break;
-      case "tile":
-        const tile = tiles.find((t) => t._id === id);
-        if (tile) {
-          setNewTile({
-            name: tile.tile_name,
-            type: tile.tile_type_id,
-            size: tile.tile_size_id,
-            description: tile.description || "",
-          });
-        }
-        break;
       case "brochure":
         const brochure = brochures.find((b) => b._id === id);
         if (brochure) {
@@ -433,12 +422,10 @@ const handleAddTile = async (e: React.FormEvent<HTMLFormElement>) => {
     if (newTile.description) payload.description = newTile.description;
     if (photoUrl) payload.tile_photo = photoUrl;
 
-    const endpoint = editMode
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile/${editId}`
-      : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
+    const endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
 
     const response = await fetch(endpoint, {
-      method: editMode ? "PUT" : "POST",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -449,37 +436,20 @@ const handleAddTile = async (e: React.FormEvent<HTMLFormElement>) => {
 
     const data = await response.json();
 
-    if (editMode) {
-      setTiles(
-        tiles.map((tile) =>
-          tile._id === editId
-            ? {
-                ...tile,
-                tile_name: newTile.name,
-                tile_type_id: newTile.type,
-                tile_size_id: newTile.size,
-                description: newTile.description || "",
-                tile_photo: photoUrl || tile.tile_photo,
-              }
-            : tile
-        )
-      );
-    } else {
-      const newTileItem: Tile = {
-        _id: data.tile._id,
-        tile_name: newTile.name,
-        tile_type_id: newTile.type,
-        tile_size_id: newTile.size,
-        description: newTile.description || "",
-        tile_photo: data.tile.tile_photo,
-        is_deleted: false,
-      };
-      setTiles([...tiles, newTileItem]);
-    }
+    const newTileItem: Tile = {
+      _id: data.tile._id,
+      tile_name: newTile.name,
+      tile_type_id: newTile.type,
+      tile_size_id: newTile.size,
+      description: newTile.description || "",
+      tile_photo: data.tile.tile_photo,
+      is_deleted: false,
+    };
+    setTiles([...tiles, newTileItem]);
 
     toast({
       title: "Success",
-      description: editMode ? "Tile updated successfully" : "Tile added successfully",
+      description: "Tile added successfully",
     });
 
     resetForm();
@@ -658,7 +628,7 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="types" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="flex w-full justify-center gap-4">
               <TabsTrigger value="types">Tile Types</TabsTrigger>
               <TabsTrigger value="sizes">Tile Sizes</TabsTrigger>
               <TabsTrigger value="tiles">Tiles</TabsTrigger>
@@ -894,13 +864,8 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
 
                     <div className="flex gap-2">
                       <Button type="submit" className="flex-1">
-                        {editMode ? "Update" : "Add"} Tile
+                        Add Tile
                       </Button>
-                      {editMode && (
-                        <Button type="button" variant="outline" onClick={resetForm}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
                   </form>
 
@@ -967,14 +932,6 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
                                   )}
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleEdit("tile", tile._id)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
