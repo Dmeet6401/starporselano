@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const connectDB = require('./config/database');
-const imageRoutes = require("./routes/ImageRoutes");
+const connectDB = require('./config/database'); 
 const brochureRoutes = require("./routes/BrochureRoute");
 
 require('dotenv').config();
@@ -22,11 +21,10 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/tile', tileRoutes);
-app.use("/api/images", imageRoutes);
 app.use("/api/brochure", brochureRoutes);
 
 // Database connection and server start
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 async function startServer() {
   try {
