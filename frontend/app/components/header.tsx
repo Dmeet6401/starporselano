@@ -98,7 +98,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <NavigationMenu className="hidden lg:flex">
+          <NavigationMenu className="hidden lg:flex" >
             <NavigationMenuList className="space-x-2">
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
@@ -127,110 +127,19 @@ export default function Header() {
                   COLLECTION
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-[800px] p-6 bg-white">
-                    <div className="grid grid-cols-3 gap-8">
-                      {/* TILES Section */}
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide border-b border-gray-200 pb-2">
-                          TILES
-                        </h3>
-                        <div className="space-y-2">
-                          {tileTypes.map((type) => (
-                            <NavigationMenuLink asChild key={type.tile_type_id}>
-                              <Link
-                                href={`/collection/tiles?type=${slugify(type.tile_type_name)}`}
-                                className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                              >
-                                {type.tile_type_name.toUpperCase()}
-                              </Link>
-                            </NavigationMenuLink>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* SANITARY WARE Section */}
-                      {/* <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide border-b border-gray-200 pb-2">
-                          SANITARY WARE
-                        </h3>
-                        <div className="space-y-2">
-                          {sanitaryTypes.map((type) => (
-                            <NavigationMenuLink asChild key={type.sanitary_type_id}>
-                              <Link
-                                href={`/collection/sanitary/${slugify(type.sanitary_type_name)}`}
-                                className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                              >
-                                {type.sanitary_type_name.toUpperCase()}
-                              </Link>
-                            </NavigationMenuLink>
-                          ))}
-                        </div>
-                      </div> */}
-
-                      {/* AVAILABLE SIZES Section */}
-                      {/* <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide border-b border-gray-200 pb-2">
-                          AVAILABLE SIZES
-                        </h3>
-                        <div className="space-y-2">
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/porcelain-600x600"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              PORCELAIN TILES 600X600
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/porcelain-600x1200"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              PORCELAIN TILES 600X1200
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/porcelain-800x1600"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              PORCELAIN TILES 800X1600
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/porcelain-800x2400"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              PORCELAIN TILES 800X2400
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/porcelain-800x3000"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              PORCELAIN TILES 800X3000
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/wall-tiles-300x600"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              WALL TILES 300X600
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href="/collection/sizes/wall-tiles-300x450"
-                              className="block text-sm text-gray-600 hover:text-blue-600 transition-colors py-1"
-                            >
-                              WALL TILES 300X450
-                            </Link>
-                          </NavigationMenuLink>
-                        </div>
-                      </div> */}
+                  <div className="min-w-[220px] max-w-xs bg-white p-4 rounded-lg shadow-lg border border-gray-100">
+                    
+                    <div className="space-y-2">
+                      {tileTypes.map((type) => (
+                        <NavigationMenuLink asChild key={type.tile_type_id}>
+                          <Link
+                            href={`/collection/tiles?type=${slugify(type.tile_type_name)}`}
+                            className="block t  ext-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded px-3 py-1 transition-colors"
+                          >
+                            {type.tile_type_name.toUpperCase()}
+                          </Link>
+                        </NavigationMenuLink>
+                      ))}
                     </div>
                   </div>
                 </NavigationMenuContent>
@@ -263,18 +172,18 @@ export default function Header() {
                   UTILITIES
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-56 bg-white p-2 rounded-md shadow-lg">
+                  <div className="min-w-[180px] bg-white p-2 rounded-lg shadow-lg border border-gray-100 flex flex-col">
                     <NavigationMenuLink asChild>
-                      <Link href="/utilities/faq" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 transition-colors">FAQ</Link>
+                      <Link href="/utilities/faq" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">FAQ</Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
-                      <Link href="/utilities/tiles-laying" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 transition-colors">TILES LAYING</Link>
+                      <Link href="/utilities/tiles-laying" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">TILES LAYING</Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
-                      <Link href="/utilities/packing-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 transition-colors">PACKING DETAILS</Link>
+                      <Link href="/utilities/packing-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">PACKING DETAILS</Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
-                      <Link href="/utilities/technical-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-600 transition-colors">TECHNICAL DETAILS</Link>
+                      <Link href="/utilities/technical-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">TECHNICAL DETAILS</Link>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
