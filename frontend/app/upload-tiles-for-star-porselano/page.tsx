@@ -22,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import axios from "axios";
 
 interface TileType {
   _id: string;
@@ -49,7 +48,7 @@ interface Tile {
 interface Brochure {
   _id: string;
   brochure_name: string;
-  brochure_pdf: any;
+  brochure_url: string;
   tile_size_id: string;
   is_deleted: boolean;
 }
@@ -381,8 +380,9 @@ const handleAddTileSize = async (e: React.FormEvent) => {
   }
 };
   
-const handleAddTile = async (e: React.FormEvent) => {
+const handleAddTile = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+
   if (!newTile.name || !newTile.type || !newTile.size) {
     toast({
       title: "Error",
@@ -392,30 +392,60 @@ const handleAddTile = async (e: React.FormEvent) => {
     return;
   }
 
+  // For new tiles, an image is mandatory; for edits it's optional
+  if (!editMode && !newTile.image) {
+    toast({
+      title: "Error",
+      description: "Please select an image (.jpg/.jpeg) for the tile",
+      variant: "destructive",
+    });
+    return;
+  }
+
   try {
-    const formData = new FormData();
-    formData.append("tile_name", newTile.name);
-    formData.append("tile_type_id", newTile.type);
-    formData.append("tile_size_id", newTile.size);
-    if (newTile.description) {
-      formData.append("description", newTile.description);
-    }
+    let photoUrl: string | undefined = undefined;
+
+    // Upload image if a new one is provided
     if (newTile.image) {
-      formData.append("tile_photo", newTile.image);
+      const uploadForm = new FormData();
+      uploadForm.append("file", newTile.image as Blob);
+
+      const uploadRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/documents/upload`,
+        {
+          method: "POST",
+          body: uploadForm,
+        }
+      );
+
+      if (!uploadRes.ok) throw new Error("Failed to upload tile image");
+
+      const uploadJson = await uploadRes.json();
+      photoUrl = uploadJson.url as string;
     }
 
-    const url = editMode
+    // Build the payload for tile create / update
+    const payload: any = {
+      tile_name: newTile.name,
+      tile_type_id: newTile.type,
+      tile_size_id: newTile.size,
+    };
+    if (newTile.description) payload.description = newTile.description;
+    if (photoUrl) payload.tile_photo = photoUrl;
+
+    const endpoint = editMode
       ? `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/edit-tile/${editId}`
       : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/tile/add-tile`;
 
-    const response = await fetch(url, {
+    const response = await fetch(endpoint, {
       method: editMode ? "PUT" : "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to save tile");
-    }
+    if (!response.ok) throw new Error("Failed to save tile");
 
     const data = await response.json();
 
@@ -429,7 +459,7 @@ const handleAddTile = async (e: React.FormEvent) => {
                 tile_type_id: newTile.type,
                 tile_size_id: newTile.size,
                 description: newTile.description || "",
-                tile_photo: data.tile.tile_photo || tile.tile_photo,
+                tile_photo: photoUrl || tile.tile_photo,
               }
             : tile
         )
@@ -449,9 +479,7 @@ const handleAddTile = async (e: React.FormEvent) => {
 
     toast({
       title: "Success",
-      description: editMode
-        ? "Tile updated successfully"
-        : "Tile added successfully",
+      description: editMode ? "Tile updated successfully" : "Tile added successfully",
     });
 
     resetForm();
@@ -465,26 +493,77 @@ const handleAddTile = async (e: React.FormEvent) => {
   }
 };
   
-const handleAddBrochure = async (e: React.FormEvent) => {
+
+
+const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
+  console.log("first")
   e.preventDefault();
-  if (!newBrochure.name || !newBrochure.file || !newBrochure.tileSize) return;
+  if (!newBrochure.name || !newBrochure.file || !newBrochure.tileSize) {
+    toast({
+      title: "Error",
+      description: "Please fill in all required fields",
+      variant: "destructive",
+    });
+    return;
+  }
+
   try {
+    // Step 1: Upload the brochure PDF and obtain its URL
     const formData = new FormData();
-    formData.append('brochure_name', newBrochure.name);
-    formData.append('tile_size_id', newBrochure.tileSize);
-    formData.append('brochure_pdf', newBrochure.file);
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/add-brochure`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+    // The backend service expects the file field name to be 'photo'
+    formData.append("file", newBrochure.file as Blob);
+
+    const uploadResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/documents/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
     );
-    toast({ title: "Success", description: "Brochure added successfully" });
+
+    if (!uploadResponse.ok) {
+      throw new Error("Failed to upload brochure file");
+    }
+
+    const uploadData = await uploadResponse.json();
+    console.log(uploadData)
+    const brochureUrl: string = uploadData.url;
+
+    // Step 2: Persist brochure metadata along with the generated URL
+    const brochureResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/add-brochure`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brochure_name: newBrochure.name,
+          brochure_url: brochureUrl,
+          tile_size_id: newBrochure.tileSize,
+        }),
+      }
+    );
+    console.log(brochureResponse)
+    if (!brochureResponse.ok) {
+      throw new Error("Failed to add brochure data");
+    }
+
+    toast({
+      title: "Success",
+      description: "Brochure added successfully",
+    });
+
+    // Reset form and refresh brochure list
     setNewBrochure({ name: "", file: undefined, tileSize: "" });
     fetchBrochures();
-    console.log('Brochure uploaded:', response.data);
   } catch (error) {
     console.error("Error adding brochure:", error);
-    toast({ title: "Error", description: "Failed to add brochure. Please try again later.", variant: "destructive" });
+    toast({
+      title: "Error",
+      description: "Failed to add brochure. Please try again later.",
+      variant: "destructive",
+    });
   }
 };
 
@@ -967,7 +1046,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                           </option>
                         ))}
                       </select>
-                    </div>
+                    </div> 
                     <Button type="submit" className="w-full">Add Brochure</Button>
                   </form>
                   <div className="mt-8">
@@ -978,7 +1057,7 @@ const handleAddBrochure = async (e: React.FormEvent) => {
                           <div key={brochure._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
                             <span className="font-medium">{brochure.brochure_name}</span>
                             <span className="text-sm text-gray-500 ml-2">{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
-                            <a href={brochure.brochure_pdf} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-4">View PDF</a>
+                            <a href={brochure.brochure_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-4">View PDF</a>
                           </div>
                         ))
                       ) : (

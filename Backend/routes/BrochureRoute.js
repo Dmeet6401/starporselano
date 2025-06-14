@@ -4,6 +4,6 @@ const { addBrochure, getAllBrochure } = require("../controllers/BrochureControll
 const router = express.Router();
 
 router.post("/add-brochure", addBrochure);
-router.get("/get-brochure", getAllBrochure);
+router.get("/get-all-brochures", getAllBrochure);
 
 module.exports = router;

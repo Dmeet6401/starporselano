@@ -5,8 +5,8 @@ const brochureSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  brochure_pdf: {
-    type: mongoose.Schema.Types.Mixed,
+  brochure_url: {
+    type: String,
     required: true
   },
   tile_size_id: {

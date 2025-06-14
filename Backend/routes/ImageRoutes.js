@@ -1,13 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const { uploadPDF } = require('../controllers/ImageController');
+const { uploadToImageKit,uploadPhoto } = require('../services/imageKitService');
 
-// Configure multer for file uploads
-const storage = multer.memoryStorage(); // or use diskStorage if you want to save to disk
-const upload = multer({ storage });
-
-// Route for uploading PDF
-router.post('/upload-pdf', upload.single('pdf'), uploadPDF);
+// Route for uploading 
+router.post('/upload', uploadPhoto,uploadToImageKit);
 
 module.exports = router;
