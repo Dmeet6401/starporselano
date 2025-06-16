@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./config/database'); 
 const brochureRoutes = require("./routes/BrochureRoute");
 const imageRoutes = require("./routes/ImageRoutes");
+const contactRoutes = require('./routes/contact');
 
 require('dotenv').config();
 
@@ -24,9 +25,19 @@ app.get('/', (req, res) => {
 app.use('/api/tile', tileRoutes);
 app.use("/api/brochure", brochureRoutes);   
 app.use("/api/documents", imageRoutes);
+app.use(contactRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!'
+  });
+});
 
 // Database connection and server start
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {

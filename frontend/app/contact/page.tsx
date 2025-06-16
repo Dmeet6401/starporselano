@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react"
+import { toast } from "sonner"
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ export default function ContactUs() {
     country: "",
     message: "",
   })
-  const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -30,8 +31,20 @@ export default function ContactUs() {
     }))
   }
 
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      phone: "",
+      email: "",
+      company: "",
+      country: "",
+      message: "",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('http://localhost:5000/api/contact', {
@@ -45,12 +58,15 @@ export default function ContactUs() {
       const result = await response.json();
 
       if (response.ok) {
-        setFeedback('Your message has been sent successfully!');
+        toast.success('Message sent successfully!');
+        resetForm();
       } else {
-        setFeedback('There was an error submitting your message.');
+        toast.error(result.message || 'Failed to send message. Please try again.');
       }
     } catch (error) {
-      setFeedback('An unexpected error occurred. Please try again later.');
+      toast.error('An unexpected error occurred. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,6 +160,7 @@ export default function ContactUs() {
                     onChange={handleInputChange}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -156,6 +173,7 @@ export default function ContactUs() {
                     onChange={handleInputChange}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                    disabled={isSubmitting}
                   />
                   <Input
                     type="email"
@@ -165,6 +183,7 @@ export default function ContactUs() {
                     onChange={handleInputChange}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -176,6 +195,7 @@ export default function ContactUs() {
                     value={formData.company}
                     onChange={handleInputChange}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={isSubmitting}
                   />
                   <Input
                     type="text"
@@ -184,6 +204,7 @@ export default function ContactUs() {
                     value={formData.country}
                     onChange={handleInputChange}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -196,15 +217,17 @@ export default function ContactUs() {
                     rows={6}
                     className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
 
                 <Button
                   type="submit"
                   className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-md font-semibold flex items-center"
+                  disabled={isSubmitting}
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  SEND MESSAGE
+                  {isSubmitting ? 'SENDING...' : 'SEND MESSAGE'}
                 </Button>
               </form>
             </div>
