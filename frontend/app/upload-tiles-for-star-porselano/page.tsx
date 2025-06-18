@@ -567,6 +567,14 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
                     setTiles(tiles.filter((tile) => tile._id !== itemToDelete.id));
                 }
                 break;
+            case "brochure":
+                response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/delete-brochure/${itemToDelete.id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    setBrochures(brochures.filter((brochure) => brochure._id !== itemToDelete.id));
+                }
+                break;
         }
 
         if (response && response.ok) {
@@ -1012,9 +1020,55 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
                       {brochures.length > 0 ? (
                         brochures.map((brochure) => (
                           <div key={brochure._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <span className="font-medium">{brochure.brochure_name}</span>
-                            <span className="text-sm text-gray-500 ml-2">{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
-                            <a href={brochure.brochure_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-4">View PDF</a>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-lg truncate" title={brochure.brochure_name}>
+                                {brochure.brochure_name}
+                              </h4>
+                              <div className="mt-2 space-y-1 text-sm text-gray-500">
+                                <div className="flex items-center gap-2">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                  >
+                                    <line x1="9" y1="21" x2="9" y2="9" />
+                                  </svg>
+                                  <span>{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <a 
+                                href={brochure.brochure_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                  <polyline points="14 2 14 8 20 8"></polyline>
+                                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                                  <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                View PDF
+                              </a>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => confirmDelete("brochure", brochure._id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         ))
                       ) : (
