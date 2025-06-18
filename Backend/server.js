@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./config/database'); 
 const brochureRoutes = require("./routes/BrochureRoute");
 const imageRoutes = require("./routes/ImageRoutes");
-const contactRoutes = require('./routes/contact');
+const contactRoutes = require('./routes/Contact');
 
 require('dotenv').config();
 
