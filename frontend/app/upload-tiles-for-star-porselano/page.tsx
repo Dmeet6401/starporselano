@@ -466,7 +466,7 @@ const handleAddTile = async (e: React.FormEvent<HTMLFormElement>) => {
 
 
 const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
-  console.log("first")
+  // console.log("first")
   e.preventDefault();
   if (!newBrochure.name || !newBrochure.file || !newBrochure.tileSize) {
     toast({
@@ -1026,20 +1026,6 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
                               </h4>
                               <div className="mt-2 space-y-1 text-sm text-gray-500">
                                 <div className="flex items-center gap-2">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-4 w-4"
-                                  >
-                                    <line x1="9" y1="21" x2="9" y2="9" />
-                                  </svg>
                                   <span>{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
                                 </div>
                               </div>
