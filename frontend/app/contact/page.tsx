@@ -267,7 +267,7 @@ export default function ContactUs() {
               <CardContent>
                 <Phone className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Call Us</h3>
-                <p className="text-gray-600 mb-2">+91 985 982 4444</p>
+                <p className="text-gray-600 mb-2">+91 99980 22554</p>
                 <p className="text-sm text-gray-500">Mon - Sat: 10:00 - 20:00 IST</p>
               </CardContent>
             </Card>
