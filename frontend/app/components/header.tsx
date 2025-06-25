@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, ChevronDown } from "lucide-react"
+import { Menu, ChevronDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
@@ -19,11 +19,11 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [tileTypes, setTileTypes] = useState<{ tile_type_id: number; tile_type_name: string }[]>([])
-  const [sanitaryTypes, setSanitaryTypes] = useState<{ sanitary_type_id: number; sanitary_type_name: string }[]>([])
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const [isCollectionOpen, setIsCollectionOpen] = useState(false)
   const [isUtilitiesOpen, setIsUtilitiesOpen] = useState(false)
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,27 +44,14 @@ export default function Header() {
         if (data.tileTypes) setTileTypes(data.tileTypes)
       } catch (error) {
         console.error("Failed to fetch tile types:", error)
+      } finally {
+        setLoading(false)
       }
     }
 
     fetchTileTypes()
   }, [])
 
-  useEffect(() => {
-    const fetchSanitaryTypes = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/sanitary/get-sanitary-type`
-        )
-        const data = await res.json()
-        if (data.sanitaryTypes) setSanitaryTypes(data.sanitaryTypes)
-      } catch (error) {
-        console.error("Failed to fetch sanitary types:", error)
-      }
-    }
-
-    fetchSanitaryTypes()
-  }, [])
 
   const slugify = (str: string) => str.toLowerCase().replace(/\s+/g, "-")
 
@@ -128,18 +115,25 @@ export default function Header() {
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="min-w-[220px] max-w-xs bg-white p-4 rounded-lg shadow-lg border border-gray-100">
-                    
                     <div className="space-y-2">
+                      {loading ? (
+                        <div className="flex justify-center items-center h-20">
+                          <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+                        </div>
+                      ) : (
+                        <>
                       {tileTypes.map((type) => (
                         <NavigationMenuLink asChild key={type.tile_type_id}>
                           <Link
                             href={`/collection/tiles?type=${slugify(type.tile_type_name)}`}
-                            className="block t  ext-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded px-3 py-1 transition-colors"
+                            className="block text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded px-3 py-1 transition-colors"
                           >
                             {type.tile_type_name.toUpperCase()}
                           </Link>
                         </NavigationMenuLink>
                       ))}
+                      </>
+                      )}
                     </div>
                   </div>
                 </NavigationMenuContent>
@@ -173,16 +167,16 @@ export default function Header() {
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="min-w-[180px] bg-white p-2 rounded-lg shadow-lg border border-gray-100 flex flex-col">
-                    <NavigationMenuLink asChild>
+                    <NavigationMenuLink asChild key="faq">
                       <Link href="/utilities/faq" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">FAQ</Link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
+                    <NavigationMenuLink asChild key="tiles-laying">
                       <Link href="/utilities/tiles-laying" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">TILES LAYING</Link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
+                    <NavigationMenuLink asChild key="packing-details">
                       <Link href="/utilities/packing-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">PACKING DETAILS</Link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
+                    <NavigationMenuLink asChild key="technical-details">
                       <Link href="/utilities/technical-details" className="block px-4 py-2 text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors">TECHNICAL DETAILS</Link>
                     </NavigationMenuLink>
                   </div>
@@ -257,16 +251,6 @@ export default function Header() {
                         {type.tile_type_name}
                       </Link>
                     ))}
-                    {sanitaryTypes.map((type) => (
-                      <Link
-                        key={type.sanitary_type_id}
-                        href={`/collection/sanitary/${slugify(type.sanitary_type_name)}`}
-                        className="block text-gray-700 hover:text-blue-600"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {type.sanitary_type_name}
-                      </Link>
-                    ))}
                   </div>
                 )}
                 <Link
@@ -294,10 +278,10 @@ export default function Header() {
                 </button>
                 {isUtilitiesOpen && (
                   <div className="pl-4 space-y-2">
-                    <Link href="/utilities/faq" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>FAQ</Link>
-                    <Link href="/utilities/tiles-laying" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>TILES LAYING</Link>
-                    <Link href="/utilities/packing-details" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>PACKING DETAILS</Link>
-                    <Link href="/utilities/technical-details" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>TECHNICAL DETAILS</Link>
+                    <Link key="mobile-faq" href="/utilities/faq" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>FAQ</Link>
+                    <Link key="mobile-tiles-laying" href="/utilities/tiles-laying" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>TILES LAYING</Link>
+                    <Link key="mobile-packing-details" href="/utilities/packing-details" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>PACKING DETAILS</Link>
+                    <Link key="mobile-technical-details" href="/utilities/technical-details" className="block text-gray-700 hover:text-blue-600" onClick={() => setIsOpen(false)}>TECHNICAL DETAILS</Link>
                   </div>
                 )}
                 <Link

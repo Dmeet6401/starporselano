@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Link from "next/link";
-import { Pencil, Trash2, X } from "lucide-react";
+import { Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import {
@@ -62,6 +62,10 @@ function TilesPageContent() {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [brochures, setBrochures] = useState<Brochure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTileTypesLoading, setIsTileTypesLoading] = useState(true);
+  const [isTileSizesLoading, setIsTileSizesLoading] = useState(true);
+  const [isTilesLoading, setIsTilesLoading] = useState(true);
+  const [isBrochuresLoading, setIsBrochuresLoading] = useState(true);
 
   const [newTileType, setNewTileType] = useState("");
   const [newTileSize, setNewTileSize] = useState("");
@@ -135,6 +139,10 @@ function TilesPageContent() {
 
   const fetchData = async () => {
     setIsLoading(true);
+    setIsTileTypesLoading(true);
+    setIsTileSizesLoading(true);
+    setIsTilesLoading(true);
+    
     try {
       const [
         tileTypesResponse,
@@ -166,6 +174,9 @@ function TilesPageContent() {
       });
     } finally {
       setIsLoading(false);
+      setIsTileTypesLoading(false);
+      setIsTileSizesLoading(false);
+      setIsTilesLoading(false);
     }
   };
 
@@ -206,12 +217,15 @@ function TilesPageContent() {
   };
 
   const fetchBrochures = async () => {
+    setIsBrochuresLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"}/api/brochure/get-all-brochures`);
       const data = await res.json();
       if (data.brochures) setBrochures(data.brochures);
     } catch (error) {
       console.error("Error fetching brochures:", error);
+    } finally {
+      setIsBrochuresLoading(false);
     }
   };
 
@@ -674,9 +688,9 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
 
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">Existing Tile Types</h3>
-                    {isLoading ? (
+                    {isTileTypesLoading ? (
                       <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                       </div>
                     ) : (
                       <div className="grid gap-3">
@@ -744,37 +758,43 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
 
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">Existing Tile Sizes</h3>
-                    <div className="grid gap-3">
-                      {tileSizes.length > 0 ? (
-                        tileSizes.map((size: TileSize) => (
-                          <div key={size._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <div>
-                              <span className="font-medium">{size.tile_size_name}</span>
-                              <span className="text-sm text-gray-500 ml-2">{size.tile_size_name}</span>
+                    {isTileSizesLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        {tileSizes.length > 0 ? (
+                          tileSizes.map((size: TileSize) => (
+                            <div key={size._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                              <div>
+                                <span className="font-medium">{size.tile_size_name}</span>
+                                <span className="text-sm text-gray-500 ml-2">{size.tile_size_name}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEdit("tileSize", size._id)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => confirmDelete("tileSize", size._id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit("tileSize", size._id)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => confirmDelete("tileSize", size._id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p>No tile sizes available</p>
-                      )}
-                    </div>
+                          ))
+                        ) : (
+                          <p>No tile sizes available</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -879,84 +899,90 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
 
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">Existing Tiles</h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {tiles.length > 0 ? (
-                        tiles.map((tile) => (
-                          <Card key={tile._id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
-                            <div className="relative aspect-square bg-gray-100">
-                              {tile.tile_photo ? (
-                                <img
-                                  src={tile.tile_photo}
-                                  alt={tile.tile_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                    <path d="M21 15l-5-5L5 21" />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start gap-4">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-semibold text-lg truncate" title={tile.tile_name}>
-                                    {tile.tile_name}
-                                  </h4>
-                                  <div className="mt-2 space-y-1 text-sm text-gray-500">
-                                    <div className="flex items-center gap-2">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                                        <line x1="12" y1="22.08" x2="12" y2="12" />
-                                      </svg>
-                                      <span>{tileTypes.find((t) => t._id === tile.tile_type_id)?.tile_type_name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="h-4 w-4"
-                                      >
-                                        <line x1="9" y1="21" x2="9" y2="9" />
-                                      </svg>
-                                      <span>{tileSizes.find((s) => s._id === tile.tile_size_id)?.tile_size_name}</span>
-                                    </div>
+                    {isTilesLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : (
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {tiles.length > 0 ? (
+                          tiles.map((tile) => (
+                            <Card key={tile._id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                              <div className="relative aspect-square bg-gray-100">
+                                {tile.tile_photo ? (
+                                  <img
+                                    src={tile.tile_photo}
+                                    alt={tile.tile_name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                      <circle cx="8.5" cy="8.5" r="1.5" />
+                                      <path d="M21 15l-5-5L5 21" />
+                                    </svg>
                                   </div>
-                                  {tile.description && (
-                                    <p className="mt-3 text-sm text-gray-600 line-clamp-2" title={tile.description}>
-                                      {tile.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => confirmDelete("tile", tile._id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                                )}
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      ) : (
-                        <p>No tiles available</p>
-                      )}
-                    </div>
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-start gap-4">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-lg truncate" title={tile.tile_name}>
+                                      {tile.tile_name}
+                                    </h4>
+                                    <div className="mt-2 space-y-1 text-sm text-gray-500">
+                                      <div className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                          <line x1="12" y1="22.08" x2="12" y2="12" />
+                                        </svg>
+                                        <span>{tileTypes.find((t) => t._id === tile.tile_type_id)?.tile_type_name}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="24"
+                                          height="24"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="h-4 w-4"
+                                        >
+                                          <line x1="9" y1="21" x2="9" y2="9" />
+                                        </svg>
+                                        <span>{tileSizes.find((s) => s._id === tile.tile_size_id)?.tile_size_name}</span>
+                                      </div>
+                                    </div>
+                                    {tile.description && (
+                                      <p className="mt-3 text-sm text-gray-600 line-clamp-2" title={tile.description}>
+                                        {tile.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      onClick={() => confirmDelete("tile", tile._id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <p>No tiles available</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1016,51 +1042,57 @@ const handleAddBrochure = async (e: React.FormEvent<HTMLFormElement>) => {
                   </form>
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">Existing Brochures</h3>
-                    <div className="grid gap-3">
-                      {brochures.length > 0 ? (
-                        brochures.map((brochure) => (
-                          <div key={brochure._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-lg truncate" title={brochure.brochure_name}>
-                                {brochure.brochure_name}
-                              </h4>
-                              <div className="mt-2 space-y-1 text-sm text-gray-500">
-                                <div className="flex items-center gap-2">
-                                  <span>{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
+                    {isBrochuresLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        {brochures.length > 0 ? (
+                          brochures.map((brochure) => (
+                            <div key={brochure._id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-lg truncate" title={brochure.brochure_name}>
+                                  {brochure.brochure_name}
+                                </h4>
+                                <div className="mt-2 space-y-1 text-sm text-gray-500">
+                                  <div className="flex items-center gap-2">
+                                    <span>{tileSizes.find((s) => s._id === brochure.tile_size_id)?.tile_size_name}</span>
+                                  </div>
                                 </div>
                               </div>
+                              <div className="flex items-center gap-4">
+                                <a 
+                                  href={brochure.brochure_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                  </svg>
+                                  View PDF
+                                </a>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => confirmDelete("brochure", brochure._id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <a 
-                                href={brochure.brochure_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                  <polyline points="14 2 14 8 20 8"></polyline>
-                                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                                  <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
-                                View PDF
-                              </a>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => confirmDelete("brochure", brochure._id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-center text-gray-500">No brochures available</p>
-                      )}
-                    </div>
+                          ))
+                        ) : (
+                          <p className="text-center text-gray-500">No brochures available</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
